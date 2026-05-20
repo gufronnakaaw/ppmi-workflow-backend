@@ -1,17 +1,18 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { AppService } from './app.service';
+import { SuccessResponse } from './common/types/global.type';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
-  @Get('users')
-  async getUsers() {
-    return this.appService.getUsers();
+  @HttpCode(HttpStatus.OK)
+  index(): SuccessResponse {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      message: `PPMI Workflow ${process.env.MODE === 'production' ? 'API' : 'Dev API'}`,
+    };
   }
 }
