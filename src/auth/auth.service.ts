@@ -58,6 +58,7 @@ export class AuthService {
         id: user.id,
         is_admin: user.is_admin,
         fullname: user.fullname,
+        division: user.is_admin ? null : user.division.name,
         roles: roles.length ? roles : null,
       }),
     };
