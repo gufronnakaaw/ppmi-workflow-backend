@@ -52,8 +52,8 @@ export class AuthService {
       fullname: user.fullname,
       email: user.email,
       is_admin: user.is_admin,
-      division: user.division.name,
-      roles,
+      division: user.is_admin ? null : user.division.name,
+      roles: roles.length ? roles : null,
       access_token: await this.jwtService.signAsync({
         id: user.id,
         is_admin: user.is_admin,
