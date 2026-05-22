@@ -8,18 +8,74 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+model Division {
+  id                    String            @id @default(uuid())
+  code                  String            @unique
+  name                  String            @unique
+  description           String?
+
+  users                 User[]
+  user_roles            UserRole[]
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  created_by            String
+  updated_by            String
+
+  @@map("division")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean? @default(false)
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?
+model User {
+  id                    String            @id @default(uuid())
+  division_id           String?
+  fullname              String
+  email                 String            @unique
+  password              String            @db.VarChar(255)
+  phone                 String?
+  is_admin              Boolean           @default(false)
+
+  division              Division?         @relation(fields: [division_id], references: [id])
+  user_roles            UserRole[]
+  
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  created_by            String
+  updated_by            String
+
+  @@map("user")
+}
+
+model Role {
+  id                    String            @id @default(uuid())
+  code                  String            @unique
+  name                  String            @unique
+  description           String?
+
+  user_roles            UserRole[]
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  created_by            String
+  updated_by            String
+
+  @@map("role")  
+}
+
+model UserRole {
+  id                    String            @id @default(uuid())
+  user_id               String
+  role_id               String
+  division_id           String
+
+  user                  User              @relation(fields: [user_id], references: [id])
+  role                  Role              @relation(fields: [role_id], references: [id])
+  division              Division          @relation(fields: [division_id], references: [id])
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  created_by            String
+  updated_by            String
+
+  @@unique([user_id, role_id, division_id])
+  @@map("user_role")
 }
