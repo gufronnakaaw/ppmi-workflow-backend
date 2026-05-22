@@ -62,6 +62,7 @@ describe('AuthService', () => {
       id: 'user-1',
       is_admin: false,
       fullname: 'Bp. Azhar',
+      division: 'P&I',
       roles: ['Editor'],
     });
     expect(result).toEqual({
