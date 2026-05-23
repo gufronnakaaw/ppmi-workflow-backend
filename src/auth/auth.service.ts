@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../common/services/prisma.service';
 import { hashPassword, verifyPassword } from '../utils/bcrypt.util';
-import { LoginInput, RegisterInput } from './auth.validation';
+import { LoginDto, RegisterDto } from './auth.validation';
 
 @Injectable()
 export class AuthService {
@@ -11,7 +11,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(body: LoginInput) {
+  async login(body: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: body.email },
       select: {
@@ -64,7 +64,7 @@ export class AuthService {
     };
   }
 
-  async register(body: RegisterInput, fullname: string) {
+  async register(body: RegisterDto, fullname: string) {
     const user = await this.prisma.user.create({
       data: {
         fullname: body.fullname,

@@ -5,10 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  CreateDivisionInput,
-  CreateRoleInput,
-  UpdateDivisionInput,
-  UpdateRoleInput,
+  CreateDivisionDto,
+  CreateRoleDto,
+  UpdateDivisionDto,
+  UpdateRoleDto,
 } from './app.validation';
 import { PrismaService } from './common/services/prisma.service';
 
@@ -28,7 +28,7 @@ export class AppService {
     });
   }
 
-  async createDivision(body: CreateDivisionInput, fullname: string) {
+  async createDivision(body: CreateDivisionDto, fullname: string) {
     const duplicate = await this.prismaService.division.findFirst({
       where: {
         name: body.name,
@@ -52,11 +52,7 @@ export class AppService {
     });
   }
 
-  async updateDivision(
-    id: string,
-    body: UpdateDivisionInput,
-    fullname: string,
-  ) {
+  async updateDivision(id: string, body: UpdateDivisionDto, fullname: string) {
     const existing = await this.prismaService.division.findUnique({
       where: { id },
     });
@@ -100,7 +96,7 @@ export class AppService {
     });
   }
 
-  async createRole(body: CreateRoleInput, fullname: string) {
+  async createRole(body: CreateRoleDto, fullname: string) {
     const duplicate = await this.prismaService.role.findFirst({
       where: {
         name: body.name,
@@ -124,7 +120,7 @@ export class AppService {
     });
   }
 
-  async updateRole(id: string, body: UpdateRoleInput, fullname: string) {
+  async updateRole(id: string, body: UpdateRoleDto, fullname: string) {
     const existing = await this.prismaService.role.findUnique({
       where: { id },
     });

@@ -15,10 +15,10 @@ import {
 import { Request } from 'express';
 import { AppService } from './app.service';
 import {
-  CreateDivisionInput,
-  CreateRoleInput,
-  UpdateDivisionInput,
-  UpdateRoleInput,
+  CreateDivisionDto,
+  CreateRoleDto,
+  UpdateDivisionDto,
+  UpdateRoleDto,
   createDivisionSchema,
   createRoleSchema,
   updateDivisionSchema,
@@ -74,7 +74,7 @@ export class AppController {
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(createDivisionSchema))
   async createDivision(
-    @Body() body: CreateDivisionInput,
+    @Body() body: CreateDivisionDto,
     @Req() req: Request,
   ): Promise<SuccessResponse> {
     return {
@@ -93,7 +93,7 @@ export class AppController {
   @UsePipes(new ZodValidationPipe(updateDivisionSchema))
   async updateDivision(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() body: UpdateDivisionInput,
+    @Body() body: UpdateDivisionDto,
     @Req() req: Request,
   ): Promise<SuccessResponse> {
     return {
@@ -136,7 +136,7 @@ export class AppController {
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(createRoleSchema))
   async createRole(
-    @Body() body: CreateRoleInput,
+    @Body() body: CreateRoleDto,
     @Req() req: Request,
   ): Promise<SuccessResponse> {
     return {
@@ -152,7 +152,7 @@ export class AppController {
   @UsePipes(new ZodValidationPipe(updateRoleSchema))
   async updateRole(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() body: UpdateRoleInput,
+    @Body() body: UpdateRoleDto,
     @Req() req: Request,
   ): Promise<SuccessResponse> {
     return {

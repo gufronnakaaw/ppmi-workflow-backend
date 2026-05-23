@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const loginSchema = z.object({
@@ -5,7 +6,7 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 });
 
-export type LoginInput = z.infer<typeof loginSchema>;
+export class LoginDto extends createZodDto(loginSchema) {}
 
 export const registerSchema = z.object({
   fullname: z.string().min(2),
@@ -17,4 +18,4 @@ export const registerSchema = z.object({
   roles: z.array(z.uuid()).optional(),
 });
 
-export type RegisterInput = z.infer<typeof registerSchema>;
+export class RegisterDto extends createZodDto(registerSchema) {}

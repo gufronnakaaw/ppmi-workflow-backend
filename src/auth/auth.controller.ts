@@ -15,9 +15,9 @@ import { ZodValidationPipe } from '../common/pipes/zod.pipe';
 import { SuccessResponse } from '../common/types/global.type';
 import { AuthService } from './auth.service';
 import {
-  LoginInput,
+  LoginDto,
   loginSchema,
-  RegisterInput,
+  RegisterDto,
   registerSchema,
 } from './auth.validation';
 
@@ -30,7 +30,7 @@ export class AuthController {
   @AuthMetaData('SkipAuth')
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(loginSchema))
-  async login(@Body() body: LoginInput): Promise<SuccessResponse> {
+  async login(@Body() body: LoginDto): Promise<SuccessResponse> {
     return {
       success: true,
       status_code: HttpStatus.CREATED,
@@ -43,7 +43,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(registerSchema))
   async register(
-    @Body() body: RegisterInput,
+    @Body() body: RegisterDto,
     @Req() req: Request,
   ): Promise<SuccessResponse> {
     return {

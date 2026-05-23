@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const createDivisionSchema = z.object({
@@ -5,25 +6,25 @@ export const createDivisionSchema = z.object({
   description: z.string().optional(),
 });
 
-export type CreateDivisionInput = z.infer<typeof createDivisionSchema>;
+export class CreateDivisionDto extends createZodDto(createDivisionSchema) {}
 
 export const updateDivisionSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
 });
 
-export type UpdateDivisionInput = z.infer<typeof updateDivisionSchema>;
+export class UpdateDivisionDto extends createZodDto(updateDivisionSchema) {}
 
 export const createRoleSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
 });
 
-export type CreateRoleInput = z.infer<typeof createRoleSchema>;
+export class CreateRoleDto extends createZodDto(createRoleSchema) {}
 
 export const updateRoleSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
 });
 
-export type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
+export class UpdateRoleDto extends createZodDto(updateRoleSchema) {}
