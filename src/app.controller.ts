@@ -16,9 +16,13 @@ import { Request } from 'express';
 import { AppService } from './app.service';
 import {
   CreateDivisionInput,
-  createDivisionSchema,
+  CreateRoleInput,
   UpdateDivisionInput,
+  UpdateRoleInput,
+  createDivisionSchema,
+  createRoleSchema,
   updateDivisionSchema,
+  updateRoleSchema,
 } from './app.validation';
 import { AuthMetaData } from './common/decorators/auth.decorator';
 import { UserGuard } from './common/guards/user.guard';
@@ -96,6 +100,65 @@ export class AppController {
       success: true,
       status_code: HttpStatus.OK,
       data: await this.appService.updateDivision(
+        id,
+        body,
+        req.credentials.fullname,
+      ),
+    };
+  }
+
+  @Get('roles')
+  @AuthMetaData('AdminOnly')
+  @HttpCode(HttpStatus.OK)
+  async listRoles(): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.listRoles(),
+    };
+  }
+
+  @Get('roles/:id')
+  @AuthMetaData('AdminOnly')
+  @HttpCode(HttpStatus.OK)
+  async getRole(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.getRole(id),
+    };
+  }
+
+  @Post('roles')
+  @AuthMetaData('AdminOnly')
+  @HttpCode(HttpStatus.CREATED)
+  @UsePipes(new ZodValidationPipe(createRoleSchema))
+  async createRole(
+    @Body() body: CreateRoleInput,
+    @Req() req: Request,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.CREATED,
+      data: await this.appService.createRole(body, req.credentials.fullname),
+    };
+  }
+
+  @Patch('roles/:id')
+  @AuthMetaData('AdminOnly')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(updateRoleSchema))
+  async updateRole(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() body: UpdateRoleInput,
+    @Req() req: Request,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.updateRole(
         id,
         body,
         req.credentials.fullname,

@@ -12,6 +12,10 @@ describe('AppController', () => {
     getDivision: vi.fn(),
     createDivision: vi.fn(),
     updateDivision: vi.fn(),
+    listRoles: vi.fn(),
+    getRole: vi.fn(),
+    createRole: vi.fn(),
+    updateRole: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -68,13 +72,12 @@ describe('AppController', () => {
   it('returns create division response', async () => {
     appServiceMock.createDivision.mockResolvedValue({ id: 'div-1' });
 
-    const result = await controller.createDivision(
-      { code: 'PI', name: 'P&I' },
-      { credentials: { fullname: 'Super Admin' } } as any,
-    );
+    const result = await controller.createDivision({ name: 'P&I' }, {
+      credentials: { fullname: 'Super Admin' },
+    } as any);
 
     expect(appServiceMock.createDivision).toHaveBeenCalledWith(
-      { code: 'PI', name: 'P&I' },
+      { name: 'P&I' },
       'Super Admin',
     );
     expect(result).toEqual({
@@ -102,6 +105,71 @@ describe('AppController', () => {
       success: true,
       status_code: HttpStatus.OK,
       data: { id: 'div-1' },
+    });
+  });
+
+  it('returns role list response', async () => {
+    appServiceMock.listRoles.mockResolvedValue([{ id: 'role-1' }]);
+
+    const result = await controller.listRoles();
+
+    expect(appServiceMock.listRoles).toHaveBeenCalled();
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: [{ id: 'role-1' }],
+    });
+  });
+
+  it('returns role detail response', async () => {
+    appServiceMock.getRole.mockResolvedValue({ id: 'role-1' });
+
+    const result = await controller.getRole('role-1');
+
+    expect(appServiceMock.getRole).toHaveBeenCalledWith('role-1');
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: { id: 'role-1' },
+    });
+  });
+
+  it('returns create role response', async () => {
+    appServiceMock.createRole.mockResolvedValue({ id: 'role-1' });
+
+    const result = await controller.createRole({ name: 'Editor' }, {
+      credentials: { fullname: 'Super Admin' },
+    } as any);
+
+    expect(appServiceMock.createRole).toHaveBeenCalledWith(
+      { name: 'Editor' },
+      'Super Admin',
+    );
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.CREATED,
+      data: { id: 'role-1' },
+    });
+  });
+
+  it('returns update role response', async () => {
+    appServiceMock.updateRole.mockResolvedValue({ id: 'role-1' });
+
+    const result = await controller.updateRole(
+      'role-1',
+      { name: 'Editor Updated' },
+      { credentials: { fullname: 'Super Admin' } } as any,
+    );
+
+    expect(appServiceMock.updateRole).toHaveBeenCalledWith(
+      'role-1',
+      { name: 'Editor Updated' },
+      'Super Admin',
+    );
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: { id: 'role-1' },
     });
   });
 });
