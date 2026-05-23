@@ -8,6 +8,7 @@ import {
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthMetaData } from '../common/decorators/auth.decorator';
 import { UserGuard } from '../common/guards/user.guard';
@@ -38,6 +39,7 @@ export class AuthController {
     };
   }
 
+  @ApiBearerAuth()
   @Post('register')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.CREATED)

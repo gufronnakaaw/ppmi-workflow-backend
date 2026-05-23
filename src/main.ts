@@ -13,6 +13,7 @@ async function bootstrap() {
     .setDescription('The PPMI Workflow API documentation')
     .setVersion('1.0')
     .addTag('PPMI')
+    .addBearerAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

@@ -12,6 +12,7 @@ import {
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AppService } from './app.service';
 import {
@@ -45,6 +46,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Get('divisions')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
@@ -56,6 +58,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Get('divisions/:id')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
@@ -69,6 +72,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Post('divisions')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.CREATED)
@@ -87,6 +91,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Patch('divisions/:id')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
@@ -107,6 +112,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Get('roles')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
@@ -118,6 +124,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Get('roles/:id')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
@@ -131,6 +138,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Post('roles')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.CREATED)
@@ -146,6 +154,7 @@ export class AppController {
     };
   }
 
+  @ApiBearerAuth()
   @Patch('roles/:id')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
