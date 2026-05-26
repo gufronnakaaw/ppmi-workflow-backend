@@ -14,35 +14,46 @@ model Division {
   name                  String            @unique
   description           String?
 
-  users                 User[]
-  user_roles            UserRole[]
+  users                 UserDivision[]
+  qs                    QS[]
 
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
-  created_by            String
-  updated_by            String
 
   @@map("division")
 }
 
 model User {
-  id                    String            @id @default(uuid())
-  division_id           String?
-  fullname              String
-  email                 String            @unique
-  password              String            @db.VarChar(255)
-  phone                 String?
-  is_admin              Boolean           @default(false)
+  id             String          @id @default(uuid())
+  fullname       String
+  email          String          @unique
+  password       String          @db.VarChar(255)
+  phone          String?
+  is_admin       Boolean         @default(false)
 
-  division              Division?         @relation(fields: [division_id], references: [id])
-  user_roles            UserRole[]
-  
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  created_by            String
-  updated_by            String
+  divisions      UserDivision[]
+  user_roles     UserRole[]
+  logs           Log[]
+
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
 
   @@map("user")
+}
+
+model UserDivision {
+  id             String          @id @default(uuid())
+  user_id        String
+  division_id    String
+
+  user           User            @relation(fields: [user_id], references: [id])
+  division       Division        @relation(fields: [division_id], references: [id])
+
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+
+  @@unique([user_id, division_id])
+  @@map("user_division")
 }
 
 model Role {
@@ -55,8 +66,6 @@ model Role {
 
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
-  created_by            String
-  updated_by            String
 
   @@map("role")  
 }
@@ -65,17 +74,156 @@ model UserRole {
   id                    String            @id @default(uuid())
   user_id               String
   role_id               String
-  division_id           String
 
   user                  User              @relation(fields: [user_id], references: [id])
   role                  Role              @relation(fields: [role_id], references: [id])
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  @@unique([user_id, role_id])
+  @@map("user_role")
+}
+
+model Bank {
+  id                    String            @id @default(uuid())
+  name                  String            @unique
+  account_number        String            @unique
+  account_name          String
+  is_deleted            Boolean           @default(false)
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  deleted_at            DateTime?
+
+  @@map("bank")
+}
+
+enum Action {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  VIEW
+  CLICK
+  OTHER
+}
+
+enum ReferenceType {
+  USER
+  DIVISION
+  ROLE
+  QS
+  INVOICE
+  BANK
+}
+
+model Log {
+  id                    String            @id @default(uuid())
+  user_id               String
+  action                Action
+  description           String            @db.Text
+  reference_id          String?
+  reference_type        ReferenceType?
+  details               String?           @db.Text
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  user                  User              @relation(fields: [user_id], references: [id])
+
+  @@map("log")
+}
+
+enum QSType {
+  NEW
+  RENEWAL
+}
+
+enum QSSTATUS {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model QS {
+  id                    String            @id @default(uuid())
+  division_id           String
+  type                  QSType
+  status                QSSTATUS
+  insured               String
+  vessel                String
+  insurance             String
+  member                String
+  leader                String
+  policy_number         String
+  period_from           DateTime
+  period_to             DateTime
+  premium_amount        Int
+  currency              String
+  remarks               String
+  is_deleted            Boolean           @default(false)  
+
+  invoices              Invoice[]
   division              Division          @relation(fields: [division_id], references: [id])
 
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
-  created_by            String
-  updated_by            String
+  deleted_at            DateTime?
 
-  @@unique([user_id, role_id, division_id])
-  @@map("user_role")
+  @@map("qs")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  VOUCHER
+  CLOSED
+}
+
+model Invoice {
+  id                    String            @id @default(uuid())
+  qs_id                 String
+  invoice_number        String            @unique
+  invoice_date          DateTime
+  due_date              DateTime
+  insured               String
+  amount                Int
+  currency              String
+  status                InvoiceStatus
+  remarks               String
+  is_deleted            Boolean           @default(false)  
+
+  qs                    QS                @relation(fields: [qs_id], references: [id])
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  deleted_at            DateTime?
+
+  @@map("invoice")
+}
+
+enum FileReferenceType {
+  INVOICE
+  SHIPMENT
+}
+
+model FileAttachment {
+  id                    String            @id @default(uuid())
+  invoice_id            String
+  file_name             String
+  file_type             String
+  file_size             Int
+  file_url              String
+  file_key              String
+  reference_type        FileReferenceType
+  reference_id          String
+  is_deleted            Boolean           @default(false)
+
+  uploaded_at           DateTime          @default(now())
+  deleted_at            DateTime?
+
+  @@map("file_attachment")
 }
