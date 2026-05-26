@@ -16,6 +16,9 @@ describe('AppController', () => {
     getRole: vi.fn(),
     createRole: vi.fn(),
     updateRole: vi.fn(),
+    listUsers: vi.fn(),
+    getUser: vi.fn(),
+    updateUser: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -73,12 +76,13 @@ describe('AppController', () => {
     appServiceMock.createDivision.mockResolvedValue({ id: 'div-1' });
 
     const result = await controller.createDivision({ name: 'P&I' }, {
-      credentials: { fullname: 'Super Admin' },
+      credentials: { fullname: 'Super Admin', id: 'admin-1' },
     } as any);
 
     expect(appServiceMock.createDivision).toHaveBeenCalledWith(
       { name: 'P&I' },
       'Super Admin',
+      'admin-1',
     );
     expect(result).toEqual({
       success: true,
@@ -93,13 +97,14 @@ describe('AppController', () => {
     const result = await controller.updateDivision(
       'div-1',
       { name: 'P&I Updated' },
-      { credentials: { fullname: 'Super Admin' } } as any,
+      { credentials: { fullname: 'Super Admin', id: 'admin-1' } } as any,
     );
 
     expect(appServiceMock.updateDivision).toHaveBeenCalledWith(
       'div-1',
       { name: 'P&I Updated' },
       'Super Admin',
+      'admin-1',
     );
     expect(result).toEqual({
       success: true,
@@ -138,12 +143,13 @@ describe('AppController', () => {
     appServiceMock.createRole.mockResolvedValue({ id: 'role-1' });
 
     const result = await controller.createRole({ name: 'Editor' }, {
-      credentials: { fullname: 'Super Admin' },
+      credentials: { fullname: 'Super Admin', id: 'admin-1' },
     } as any);
 
     expect(appServiceMock.createRole).toHaveBeenCalledWith(
       { name: 'Editor' },
       'Super Admin',
+      'admin-1',
     );
     expect(result).toEqual({
       success: true,
@@ -158,18 +164,83 @@ describe('AppController', () => {
     const result = await controller.updateRole(
       'role-1',
       { name: 'Editor Updated' },
-      { credentials: { fullname: 'Super Admin' } } as any,
+      { credentials: { fullname: 'Super Admin', id: 'admin-1' } } as any,
     );
 
     expect(appServiceMock.updateRole).toHaveBeenCalledWith(
       'role-1',
       { name: 'Editor Updated' },
       'Super Admin',
+      'admin-1',
     );
     expect(result).toEqual({
       success: true,
       status_code: HttpStatus.OK,
       data: { id: 'role-1' },
+    });
+  });
+
+  it('returns users list response', async () => {
+    appServiceMock.listUsers.mockResolvedValue([{ id: 'user-1' }]);
+
+    const result = await controller.listUsers({ division: 'P&I' });
+
+    expect(appServiceMock.listUsers).toHaveBeenCalledWith('P&I');
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: [{ id: 'user-1' }],
+    });
+  });
+
+  it('returns user detail response', async () => {
+    appServiceMock.getUser.mockResolvedValue({ id: 'user-1' });
+
+    const result = await controller.getUser('user-1');
+
+    expect(appServiceMock.getUser).toHaveBeenCalledWith('user-1');
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: { id: 'user-1' },
+    });
+  });
+
+  it('returns update user response', async () => {
+    appServiceMock.updateUser.mockResolvedValue({ id: 'user-1' });
+
+    const result = await controller.updateUser(
+      'user-1',
+      {
+        fullname: 'User Updated',
+        email: 'user@example.com',
+        password: 'secret123',
+        phone: '081234567890',
+        is_admin: false,
+        divisions: ['div-1'],
+        roles: ['role-1'],
+      },
+      { credentials: { fullname: 'Super Admin', id: 'admin-1' } } as any,
+    );
+
+    expect(appServiceMock.updateUser).toHaveBeenCalledWith(
+      'user-1',
+      {
+        fullname: 'User Updated',
+        email: 'user@example.com',
+        password: 'secret123',
+        phone: '081234567890',
+        is_admin: false,
+        divisions: ['div-1'],
+        roles: ['role-1'],
+      },
+      'Super Admin',
+      'admin-1',
+    );
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: { id: 'user-1' },
     });
   });
 });

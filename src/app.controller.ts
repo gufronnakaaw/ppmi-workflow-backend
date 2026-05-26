@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
   UsePipes,
@@ -20,10 +21,12 @@ import {
   CreateRoleDto,
   UpdateDivisionDto,
   UpdateRoleDto,
+  UpdateUserDto,
   createDivisionSchema,
   createRoleSchema,
   updateDivisionSchema,
   updateRoleSchema,
+  updateUserSchema,
 } from './app.validation';
 import { AuthMetaData } from './common/decorators/auth.decorator';
 import { UserGuard } from './common/guards/user.guard';
@@ -87,6 +90,7 @@ export class AppController {
       data: await this.appService.createDivision(
         body,
         req.credentials.fullname,
+        req.credentials.id,
       ),
     };
   }
@@ -108,6 +112,7 @@ export class AppController {
         id,
         body,
         req.credentials.fullname,
+        req.credentials.id,
       ),
     };
   }
@@ -150,7 +155,11 @@ export class AppController {
     return {
       success: true,
       status_code: HttpStatus.CREATED,
-      data: await this.appService.createRole(body, req.credentials.fullname),
+      data: await this.appService.createRole(
+        body,
+        req.credentials.fullname,
+        req.credentials.id,
+      ),
     };
   }
 
@@ -171,6 +180,57 @@ export class AppController {
         id,
         body,
         req.credentials.fullname,
+        req.credentials.id,
+      ),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Get('users')
+  @AuthMetaData('AdminOnly')
+  @HttpCode(HttpStatus.OK)
+  async listUsers(
+    @Query() query: { division: string },
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.listUsers(query.division),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Get('users/:id')
+  @AuthMetaData('AdminOnly')
+  @HttpCode(HttpStatus.OK)
+  async getUser(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.getUser(id),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Patch('users/:id')
+  @AuthMetaData('AdminOnly')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(updateUserSchema))
+  async updateUser(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() body: UpdateUserDto,
+    @Req() req: Request,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.updateUser(
+        id,
+        body,
+        req.credentials.fullname,
+        req.credentials.id,
       ),
     };
   }

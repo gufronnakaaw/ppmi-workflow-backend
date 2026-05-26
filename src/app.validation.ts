@@ -28,3 +28,15 @@ export const updateRoleSchema = z.object({
 });
 
 export class UpdateRoleDto extends createZodDto(updateRoleSchema) {}
+
+export const updateUserSchema = z.object({
+  fullname: z.string().min(2).optional(),
+  email: z.email().optional(),
+  password: z.string().min(6).optional(),
+  phone: z.string().optional(),
+  is_admin: z.boolean().optional(),
+  divisions: z.array(z.uuid()).optional(),
+  roles: z.array(z.uuid()).optional(),
+});
+
+export class UpdateUserDto extends createZodDto(updateUserSchema) {}
