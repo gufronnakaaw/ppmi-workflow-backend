@@ -51,7 +51,11 @@ export class AuthController {
     return {
       success: true,
       status_code: HttpStatus.CREATED,
-      data: await this.authService.register(body, req.credentials.fullname),
+      data: await this.authService.register(
+        body,
+        req.credentials.fullname,
+        req.credentials.id,
+      ),
     };
   }
 }

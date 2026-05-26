@@ -14,7 +14,7 @@ export const registerSchema = z.object({
   password: z.string().min(6),
   phone: z.string().optional(),
   is_admin: z.boolean().optional(),
-  division_id: z.uuid().optional(),
+  divisions: z.array(z.uuid()).optional(),
   roles: z.array(z.uuid()).optional(),
 });
 

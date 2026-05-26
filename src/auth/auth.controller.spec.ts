@@ -59,7 +59,7 @@ describe('AuthController', () => {
         email: 'azhar@example.com',
         password: 'secret123',
       },
-      { credentials: { fullname: 'Super Admin' } } as any,
+      { credentials: { fullname: 'Super Admin', id: 'admin-1' } } as any,
     );
 
     expect(authServiceMock.register).toHaveBeenCalledWith(
@@ -69,6 +69,7 @@ describe('AuthController', () => {
         password: 'secret123',
       },
       'Super Admin',
+      'admin-1',
     );
     expect(result).toEqual({
       success: true,

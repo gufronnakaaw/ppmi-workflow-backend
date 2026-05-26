@@ -20,9 +20,13 @@ export class AuthService {
         email: true,
         password: true,
         is_admin: true,
-        division: {
+        divisions: {
           select: {
-            name: true,
+            division: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
         user_roles: {
@@ -47,54 +51,82 @@ export class AuthService {
 
     const roles = user.user_roles.map((ur) => ur.role.name);
 
+    await this.prisma.log.create({
+      data: {
+        action: 'LOGIN',
+        reference_id: user.id,
+        reference_type: 'USER',
+        user_id: user.id,
+        description: `${user.fullname} logged in`,
+      },
+    });
+
     return {
       id: user.id,
       fullname: user.fullname,
       email: user.email,
       is_admin: user.is_admin,
-      division: user.is_admin ? null : user.division.name,
+      divisions: user.is_admin
+        ? null
+        : user.divisions.map((d) => d.division.name),
       roles: roles.length ? roles : null,
       access_token: await this.jwtService.signAsync({
         id: user.id,
         is_admin: user.is_admin,
         fullname: user.fullname,
-        division: user.is_admin ? null : user.division.name,
+        divisions: user.is_admin
+          ? null
+          : user.divisions.map((d) => d.division.name),
         roles: roles.length ? roles : null,
       }),
     };
   }
 
-  async register(body: RegisterDto, fullname: string) {
-    const user = await this.prisma.user.create({
-      data: {
-        fullname: body.fullname,
-        email: body.email,
-        password: await hashPassword(body.password),
-        phone: body.phone,
-        is_admin: body.is_admin,
-        division_id: body.division_id,
-        created_by: fullname,
-        updated_by: fullname,
-        ...(!body.is_admin
-          ? {
-              user_roles: {
-                createMany: {
-                  data: body.roles?.map((role_id) => ({
-                    role_id,
-                    created_by: fullname,
-                    updated_by: fullname,
-                    division_id: body.division_id,
-                  })),
+  async register(body: RegisterDto, fullname: string, user_id: string) {
+    const [user] = await this.prisma.$transaction([
+      this.prisma.user.create({
+        data: {
+          fullname: body.fullname,
+          email: body.email,
+          password: await hashPassword(body.password),
+          phone: body.phone,
+          is_admin: body.is_admin,
+          ...(!body.is_admin
+            ? {
+                user_roles: {
+                  createMany: {
+                    data: body.roles?.map((role_id) => ({
+                      role_id,
+                    })),
+                  },
                 },
-              },
-            }
-          : {}),
-      },
-      select: {
-        id: true,
-        email: true,
-      },
-    });
+              }
+            : {}),
+          ...(!body.is_admin
+            ? {
+                divisions: {
+                  createMany: {
+                    data: body.divisions?.map((division_id) => ({
+                      division_id,
+                    })),
+                  },
+                },
+              }
+            : {}),
+        },
+        select: {
+          id: true,
+          email: true,
+        },
+      }),
+      this.prisma.log.create({
+        data: {
+          action: 'CREATE',
+          description: `${fullname} created a new account with email ${body.email}`,
+          user_id,
+        },
+      }),
+    ]);
     return user;
   }
 }

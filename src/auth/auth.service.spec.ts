@@ -18,6 +18,10 @@ describe('AuthService', () => {
       findUnique: vi.fn(),
       create: vi.fn(),
     },
+    log: {
+      create: vi.fn(),
+    },
+    $transaction: vi.fn(),
   };
   const jwtMock = {
     signAsync: vi.fn(),
@@ -47,7 +51,7 @@ describe('AuthService', () => {
       email: 'azhar@example.com',
       password: 'hashed',
       is_admin: false,
-      division: { name: 'P&I' },
+      divisions: [{ division: { name: 'P&I' } }],
       user_roles: [{ role: { name: 'Editor' } }],
     });
     vi.mocked(verifyPassword).mockResolvedValue(true);
@@ -58,11 +62,20 @@ describe('AuthService', () => {
       password: 'secret123',
     });
 
+    expect(prismaMock.log.create).toHaveBeenCalledWith({
+      data: {
+        action: 'LOGIN',
+        reference_id: 'user-1',
+        reference_type: 'USER',
+        user_id: 'user-1',
+        description: 'Bp. Azhar logged in',
+      },
+    });
     expect(jwtMock.signAsync).toHaveBeenCalledWith({
       id: 'user-1',
       is_admin: false,
       fullname: 'Bp. Azhar',
-      division: 'P&I',
+      divisions: ['P&I'],
       roles: ['Editor'],
     });
     expect(result).toEqual({
@@ -70,7 +83,7 @@ describe('AuthService', () => {
       fullname: 'Bp. Azhar',
       email: 'azhar@example.com',
       is_admin: false,
-      division: 'P&I',
+      divisions: ['P&I'],
       roles: ['Editor'],
       access_token: 'token',
     });
@@ -91,7 +104,7 @@ describe('AuthService', () => {
       email: 'azhar@example.com',
       password: 'hashed',
       is_admin: false,
-      division: { name: 'P&I' },
+      divisions: [{ division: { name: 'P&I' } }],
       user_roles: [{ role: { name: 'Editor' } }],
     });
     vi.mocked(verifyPassword).mockResolvedValue(false);
@@ -107,27 +120,41 @@ describe('AuthService', () => {
       id: 'user-1',
       email: 'azhar@example.com',
     });
+    prismaMock.log.create.mockResolvedValue({ id: 'log-1' });
+    prismaMock.$transaction.mockResolvedValue([
+      { id: 'user-1', email: 'azhar@example.com' },
+    ]);
 
     const result = await service.register(
       {
         fullname: 'Bp. Azhar',
         email: 'azhar@example.com',
         password: 'secret123',
-        division_id: '11111111-1111-1111-1111-111111111111',
+        divisions: ['11111111-1111-1111-1111-111111111111'],
         roles: ['22222222-2222-2222-2222-222222222222'],
       },
       'Super Admin',
+      'super-admin-id',
     );
 
+    expect(prismaMock.$transaction).toHaveBeenCalled();
     expect(prismaMock.user.create).toHaveBeenCalled();
+    expect(prismaMock.log.create).toHaveBeenCalledWith({
+      data: {
+        action: 'CREATE',
+        description:
+          'Super Admin created a new account with email azhar@example.com',
+        user_id: 'super-admin-id',
+      },
+    });
     const createArg = prismaMock.user.create.mock.calls[0][0];
-    expect(createArg.data.created_by).toBe('Super Admin');
-    expect(createArg.data.updated_by).toBe('Super Admin');
     expect(createArg.data.user_roles.createMany.data).toEqual([
       {
         role_id: '22222222-2222-2222-2222-222222222222',
-        created_by: 'Super Admin',
-        updated_by: 'Super Admin',
+      },
+    ]);
+    expect(createArg.data.divisions.createMany.data).toEqual([
+      {
         division_id: '11111111-1111-1111-1111-111111111111',
       },
     ]);
@@ -140,6 +167,10 @@ describe('AuthService', () => {
       id: 'admin-1',
       email: 'admin@example.com',
     });
+    prismaMock.log.create.mockResolvedValue({ id: 'log-1' });
+    prismaMock.$transaction.mockResolvedValue([
+      { id: 'admin-1', email: 'admin@example.com' },
+    ]);
 
     await service.register(
       {
@@ -149,12 +180,20 @@ describe('AuthService', () => {
         is_admin: true,
       },
       'Root Admin',
+      'root-admin-id',
     );
 
     const createArg = prismaMock.user.create.mock.calls[0][0];
     expect(createArg.data.is_admin).toBe(true);
-    expect(createArg.data.created_by).toBe('Root Admin');
-    expect(createArg.data.updated_by).toBe('Root Admin');
     expect(createArg.data.user_roles).toBeUndefined();
+    expect(createArg.data.divisions).toBeUndefined();
+    expect(prismaMock.log.create).toHaveBeenCalledWith({
+      data: {
+        action: 'CREATE',
+        description:
+          'Root Admin created a new account with email admin@example.com',
+        user_id: 'root-admin-id',
+      },
+    });
   });
 });
