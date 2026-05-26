@@ -5,8 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  CreateBankDto,
   CreateDivisionDto,
   CreateRoleDto,
+  UpdateBankDto,
   UpdateDivisionDto,
   UpdateRoleDto,
   UpdateUserDto,
@@ -264,6 +266,228 @@ export class AppService {
     });
 
     return role;
+  }
+
+  listBanks() {
+    return this.prismaService.bank.findMany({
+      where: { is_deleted: false },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  getBank(id: string) {
+    return this.prismaService.bank.findFirst({
+      where: { id, is_deleted: false },
+    });
+  }
+
+  async createBank(body: CreateBankDto, fullname: string, user_id: string) {
+    const duplicateName = await this.prismaService.bank.findFirst({
+      where: { name: body.name },
+    });
+
+    if (duplicateName) {
+      throw new BadRequestException('Bank name already exists');
+    }
+
+    const duplicateAccount = await this.prismaService.bank.findFirst({
+      where: { account_number: body.account_number },
+    });
+
+    if (duplicateAccount) {
+      throw new BadRequestException('Bank account number already exists');
+    }
+
+    const bank = await this.prismaService.$transaction(async (prisma) => {
+      const create = await prisma.bank.create({
+        data: {
+          name: body.name,
+          account_number: body.account_number,
+          account_name: body.account_name,
+        },
+        select: {
+          id: true,
+          name: true,
+          account_number: true,
+          account_name: true,
+        },
+      });
+
+      await prisma.log.create({
+        data: {
+          action: 'CREATE',
+          reference_id: create.id,
+          reference_type: 'BANK',
+          user_id,
+          description: `${fullname} created a new bank with name ${body.name}`,
+        },
+      });
+
+      return create;
+    });
+
+    return bank;
+  }
+
+  async updateBank(
+    id: string,
+    body: UpdateBankDto,
+    fullname: string,
+    user_id: string,
+  ) {
+    const existing = await this.prismaService.bank.findFirst({
+      where: { id, is_deleted: false },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Bank not found');
+    }
+
+    if (body.name && body.name !== existing.name) {
+      const duplicateName = await this.prismaService.bank.findFirst({
+        where: { id: { not: id }, name: body.name },
+      });
+
+      if (duplicateName) {
+        throw new BadRequestException('Bank name already exists');
+      }
+    }
+
+    if (
+      body.account_number &&
+      body.account_number !== existing.account_number
+    ) {
+      const duplicateAccount = await this.prismaService.bank.findFirst({
+        where: { id: { not: id }, account_number: body.account_number },
+      });
+
+      if (duplicateAccount) {
+        throw new BadRequestException('Bank account number already exists');
+      }
+    }
+
+    const bank = await this.prismaService.$transaction(async (prisma) => {
+      const update = await prisma.bank.update({
+        where: { id },
+        data: {
+          name: body.name,
+          account_number: body.account_number,
+          account_name: body.account_name,
+        },
+        select: {
+          id: true,
+          name: true,
+          account_number: true,
+          account_name: true,
+        },
+      });
+
+      const changeInfo = body.name
+        ? {
+            label: 'bank name',
+            before: existing.name,
+            after: update.name,
+          }
+        : body.account_number
+          ? {
+              label: 'bank account number',
+              before: existing.account_number,
+              after: update.account_number,
+            }
+          : body.account_name
+            ? {
+                label: 'bank account name',
+                before: existing.account_name,
+                after: update.account_name,
+              }
+            : {
+                label: 'bank details',
+                before: existing.name,
+                after: update.name,
+              };
+
+      await prisma.log.create({
+        data: {
+          action: 'UPDATE',
+          reference_id: id,
+          reference_type: 'BANK',
+          user_id,
+          description: `${fullname} updated ${changeInfo.label} from ${changeInfo.before} to ${changeInfo.after}`,
+          details: JSON.stringify({
+            before: {
+              name: existing.name,
+              account_number: existing.account_number,
+              account_name: existing.account_name,
+            },
+            after: {
+              name: update.name,
+              account_number: update.account_number,
+              account_name: update.account_name,
+            },
+          }),
+        },
+      });
+
+      return update;
+    });
+
+    return bank;
+  }
+
+  async deleteBank(id: string, fullname: string, user_id: string) {
+    const existing = await this.prismaService.bank.findFirst({
+      where: { id, is_deleted: false },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Bank not found');
+    }
+
+    const deletedAt = new Date();
+
+    const bank = await this.prismaService.$transaction(async (prisma) => {
+      const update = await prisma.bank.update({
+        where: { id },
+        data: {
+          is_deleted: true,
+          deleted_at: deletedAt,
+        },
+        select: {
+          id: true,
+          name: true,
+          account_number: true,
+          account_name: true,
+          is_deleted: true,
+          deleted_at: true,
+        },
+      });
+
+      await prisma.log.create({
+        data: {
+          action: 'DELETE',
+          reference_id: id,
+          reference_type: 'BANK',
+          user_id,
+          description: `${fullname} deleted bank ${existing.name}`,
+          details: JSON.stringify({
+            before: {
+              name: existing.name,
+              account_number: existing.account_number,
+              account_name: existing.account_name,
+              is_deleted: existing.is_deleted,
+            },
+            after: {
+              is_deleted: true,
+              deleted_at: deletedAt,
+            },
+          }),
+        },
+      });
+
+      return update;
+    });
+
+    return bank;
   }
 
   private generateRandom4Digits(): string {

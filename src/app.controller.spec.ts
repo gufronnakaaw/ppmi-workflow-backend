@@ -16,6 +16,11 @@ describe('AppController', () => {
     getRole: vi.fn(),
     createRole: vi.fn(),
     updateRole: vi.fn(),
+    listBanks: vi.fn(),
+    getBank: vi.fn(),
+    createBank: vi.fn(),
+    updateBank: vi.fn(),
+    deleteBank: vi.fn(),
     listUsers: vi.fn(),
     getUser: vi.fn(),
     updateUser: vi.fn(),
@@ -177,6 +182,109 @@ describe('AppController', () => {
       success: true,
       status_code: HttpStatus.OK,
       data: { id: 'role-1' },
+    });
+  });
+
+  it('returns bank list response', async () => {
+    appServiceMock.listBanks.mockResolvedValue([{ id: 'bank-1' }]);
+
+    const result = await controller.listBanks();
+
+    expect(appServiceMock.listBanks).toHaveBeenCalled();
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: [{ id: 'bank-1' }],
+    });
+  });
+
+  it('returns bank detail response', async () => {
+    appServiceMock.getBank.mockResolvedValue({ id: 'bank-1' });
+
+    const result = await controller.getBank('bank-1');
+
+    expect(appServiceMock.getBank).toHaveBeenCalledWith('bank-1');
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: { id: 'bank-1' },
+    });
+  });
+
+  it('returns create bank response', async () => {
+    appServiceMock.createBank.mockResolvedValue({ id: 'bank-1' });
+
+    const result = await controller.createBank(
+      {
+        name: 'Bank A',
+        account_number: '1234567890',
+        account_name: 'PPMI',
+      },
+      { credentials: { fullname: 'User One', id: 'user-1' } } as any,
+    );
+
+    expect(appServiceMock.createBank).toHaveBeenCalledWith(
+      {
+        name: 'Bank A',
+        account_number: '1234567890',
+        account_name: 'PPMI',
+      },
+      'User One',
+      'user-1',
+    );
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.CREATED,
+      data: { id: 'bank-1' },
+    });
+  });
+
+  it('returns update bank response', async () => {
+    appServiceMock.updateBank.mockResolvedValue({ id: 'bank-1' });
+
+    const result = await controller.updateBank(
+      'bank-1',
+      {
+        name: 'Bank A Updated',
+        account_number: '0987654321',
+        account_name: 'PPMI Updated',
+      },
+      { credentials: { fullname: 'User One', id: 'user-1' } } as any,
+    );
+
+    expect(appServiceMock.updateBank).toHaveBeenCalledWith(
+      'bank-1',
+      {
+        name: 'Bank A Updated',
+        account_number: '0987654321',
+        account_name: 'PPMI Updated',
+      },
+      'User One',
+      'user-1',
+    );
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: { id: 'bank-1' },
+    });
+  });
+
+  it('returns delete bank response', async () => {
+    appServiceMock.deleteBank.mockResolvedValue({ id: 'bank-1' });
+
+    const result = await controller.deleteBank('bank-1', {
+      credentials: { fullname: 'User One', id: 'user-1' },
+    } as any);
+
+    expect(appServiceMock.deleteBank).toHaveBeenCalledWith(
+      'bank-1',
+      'User One',
+      'user-1',
+    );
+    expect(result).toEqual({
+      success: true,
+      status_code: HttpStatus.OK,
+      data: { id: 'bank-1' },
     });
   });
 

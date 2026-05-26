@@ -26,6 +26,12 @@ describe('AppService', () => {
       create: vi.fn(),
       update: vi.fn(),
     },
+    bank: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
     user: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -363,6 +369,274 @@ describe('AppService', () => {
       code: 'PPMIR-1234',
       name: 'Editor Updated',
       description: 'New',
+    });
+  });
+
+  it('lists banks ordered by name', async () => {
+    prismaMock.bank.findMany.mockResolvedValue([{ id: 'bank-1' }]);
+
+    const result = await service.listBanks();
+
+    expect(prismaMock.bank.findMany).toHaveBeenCalledWith({
+      where: { is_deleted: false },
+      orderBy: { name: 'asc' },
+    });
+    expect(result).toEqual([{ id: 'bank-1' }]);
+  });
+
+  it('gets bank by id', async () => {
+    prismaMock.bank.findFirst.mockResolvedValue({ id: 'bank-1' });
+
+    const result = await service.getBank('bank-1');
+
+    expect(prismaMock.bank.findFirst).toHaveBeenCalledWith({
+      where: { id: 'bank-1', is_deleted: false },
+    });
+    expect(result).toEqual({ id: 'bank-1' });
+  });
+
+  it('creates bank when not duplicate', async () => {
+    prismaMock.bank.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    prismaMock.bank.create.mockResolvedValue({
+      id: 'bank-1',
+      name: 'Bank A',
+      account_number: '123',
+      account_name: 'PPMI',
+    });
+    prismaMock.log.create.mockResolvedValue({ id: 'log-1' });
+
+    const result = await service.createBank(
+      {
+        name: 'Bank A',
+        account_number: '123',
+        account_name: 'PPMI',
+      },
+      'User One',
+      'user-1',
+    );
+
+    expect(prismaMock.bank.create).toHaveBeenCalledWith({
+      data: {
+        name: 'Bank A',
+        account_number: '123',
+        account_name: 'PPMI',
+      },
+      select: {
+        id: true,
+        name: true,
+        account_number: true,
+        account_name: true,
+      },
+    });
+    expect(prismaMock.log.create).toHaveBeenCalledWith({
+      data: {
+        action: 'CREATE',
+        reference_id: 'bank-1',
+        reference_type: 'BANK',
+        user_id: 'user-1',
+        description: 'User One created a new bank with name Bank A',
+      },
+    });
+    expect(result).toEqual({
+      id: 'bank-1',
+      name: 'Bank A',
+      account_number: '123',
+      account_name: 'PPMI',
+    });
+  });
+
+  it('rejects create when bank name duplicate', async () => {
+    prismaMock.bank.findFirst.mockResolvedValue({ id: 'bank-1' });
+
+    await expect(
+      service.createBank(
+        {
+          name: 'Bank A',
+          account_number: '123',
+          account_name: 'PPMI',
+        },
+        'User One',
+        'user-1',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects create when bank account number duplicate', async () => {
+    prismaMock.bank.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'bank-1' });
+
+    await expect(
+      service.createBank(
+        {
+          name: 'Bank A',
+          account_number: '123',
+          account_name: 'PPMI',
+        },
+        'User One',
+        'user-1',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects update when bank missing', async () => {
+    prismaMock.bank.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.updateBank('bank-1', { name: 'Bank A' }, 'User One', 'user-1'),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('rejects update when bank name duplicate', async () => {
+    prismaMock.bank.findFirst
+      .mockResolvedValueOnce({
+        id: 'bank-1',
+        name: 'Bank A',
+        account_number: '123',
+        account_name: 'PPMI',
+      })
+      .mockResolvedValueOnce({ id: 'bank-2' });
+
+    await expect(
+      service.updateBank('bank-1', { name: 'Bank B' }, 'User One', 'user-1'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects update when bank account number duplicate', async () => {
+    prismaMock.bank.findFirst
+      .mockResolvedValueOnce({
+        id: 'bank-1',
+        name: 'Bank A',
+        account_number: '123',
+        account_name: 'PPMI',
+      })
+      .mockResolvedValueOnce({ id: 'bank-2' });
+
+    await expect(
+      service.updateBank(
+        'bank-1',
+        { account_number: '999' },
+        'User One',
+        'user-1',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('updates bank when valid', async () => {
+    prismaMock.bank.findFirst
+      .mockResolvedValueOnce({
+        id: 'bank-1',
+        name: 'Bank A',
+        account_number: '123',
+        account_name: 'PPMI',
+      })
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    prismaMock.bank.update.mockResolvedValue({
+      id: 'bank-1',
+      name: 'Bank A Updated',
+      account_number: '999',
+      account_name: 'PPMI Updated',
+    });
+    prismaMock.log.create.mockResolvedValue({ id: 'log-1' });
+
+    const result = await service.updateBank(
+      'bank-1',
+      {
+        name: 'Bank A Updated',
+        account_number: '999',
+        account_name: 'PPMI Updated',
+      },
+      'User One',
+      'user-1',
+    );
+
+    expect(prismaMock.bank.update).toHaveBeenCalledWith({
+      where: { id: 'bank-1' },
+      data: {
+        name: 'Bank A Updated',
+        account_number: '999',
+        account_name: 'PPMI Updated',
+      },
+      select: {
+        id: true,
+        name: true,
+        account_number: true,
+        account_name: true,
+      },
+    });
+    expect(prismaMock.log.create).toHaveBeenCalledWith({
+      data: {
+        action: 'UPDATE',
+        reference_id: 'bank-1',
+        reference_type: 'BANK',
+        user_id: 'user-1',
+        description: 'User One updated bank name from Bank A to Bank A Updated',
+        details: expect.any(String),
+      },
+    });
+    expect(result).toEqual({
+      id: 'bank-1',
+      name: 'Bank A Updated',
+      account_number: '999',
+      account_name: 'PPMI Updated',
+    });
+  });
+
+  it('soft deletes bank when valid', async () => {
+    prismaMock.bank.findFirst.mockResolvedValue({
+      id: 'bank-1',
+      name: 'Bank A',
+      account_number: '123',
+      account_name: 'PPMI',
+      is_deleted: false,
+    });
+    prismaMock.bank.update.mockResolvedValue({
+      id: 'bank-1',
+      name: 'Bank A',
+      account_number: '123',
+      account_name: 'PPMI',
+      is_deleted: true,
+      deleted_at: new Date('2024-01-03T00:00:00.000Z'),
+    });
+    prismaMock.log.create.mockResolvedValue({ id: 'log-1' });
+
+    const result = await service.deleteBank('bank-1', 'User One', 'user-1');
+
+    expect(prismaMock.bank.update).toHaveBeenCalledWith({
+      where: { id: 'bank-1' },
+      data: {
+        is_deleted: true,
+        deleted_at: expect.any(Date),
+      },
+      select: {
+        id: true,
+        name: true,
+        account_number: true,
+        account_name: true,
+        is_deleted: true,
+        deleted_at: true,
+      },
+    });
+    expect(prismaMock.log.create).toHaveBeenCalledWith({
+      data: {
+        action: 'DELETE',
+        reference_id: 'bank-1',
+        reference_type: 'BANK',
+        user_id: 'user-1',
+        description: 'User One deleted bank Bank A',
+        details: expect.any(String),
+      },
+    });
+    expect(result).toEqual({
+      id: 'bank-1',
+      name: 'Bank A',
+      account_number: '123',
+      account_name: 'PPMI',
+      is_deleted: true,
+      deleted_at: new Date('2024-01-03T00:00:00.000Z'),
     });
   });
 

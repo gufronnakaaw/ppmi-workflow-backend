@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -17,13 +18,17 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AppService } from './app.service';
 import {
+  CreateBankDto,
   CreateDivisionDto,
   CreateRoleDto,
+  UpdateBankDto,
   UpdateDivisionDto,
   UpdateRoleDto,
   UpdateUserDto,
+  createBankSchema,
   createDivisionSchema,
   createRoleSchema,
+  updateBankSchema,
   updateDivisionSchema,
   updateRoleSchema,
   updateUserSchema,
@@ -179,6 +184,88 @@ export class AppController {
       data: await this.appService.updateRole(
         id,
         body,
+        req.credentials.fullname,
+        req.credentials.id,
+      ),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Get('banks')
+  @HttpCode(HttpStatus.OK)
+  async listBanks(): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.listBanks(),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Get('banks/:id')
+  @HttpCode(HttpStatus.OK)
+  async getBank(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.getBank(id),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Post('banks')
+  @HttpCode(HttpStatus.CREATED)
+  @UsePipes(new ZodValidationPipe(createBankSchema))
+  async createBank(
+    @Body() body: CreateBankDto,
+    @Req() req: Request,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.CREATED,
+      data: await this.appService.createBank(
+        body,
+        req.credentials.fullname,
+        req.credentials.id,
+      ),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Patch('banks/:id')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(updateBankSchema))
+  async updateBank(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() body: UpdateBankDto,
+    @Req() req: Request,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.updateBank(
+        id,
+        body,
+        req.credentials.fullname,
+        req.credentials.id,
+      ),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Delete('banks/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteBank(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: Request,
+  ): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.deleteBank(
+        id,
         req.credentials.fullname,
         req.credentials.id,
       ),

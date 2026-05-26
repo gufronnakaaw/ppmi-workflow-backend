@@ -29,6 +29,22 @@ export const updateRoleSchema = z.object({
 
 export class UpdateRoleDto extends createZodDto(updateRoleSchema) {}
 
+export const createBankSchema = z.object({
+  name: z.string().min(1),
+  account_number: z.string().min(1),
+  account_name: z.string().min(1),
+});
+
+export class CreateBankDto extends createZodDto(createBankSchema) {}
+
+export const updateBankSchema = z.object({
+  name: z.string().min(1).optional(),
+  account_number: z.string().min(1).optional(),
+  account_name: z.string().min(1).optional(),
+});
+
+export class UpdateBankDto extends createZodDto(updateBankSchema) {}
+
 export const updateUserSchema = z.object({
   fullname: z.string().min(2).optional(),
   email: z.email().optional(),
