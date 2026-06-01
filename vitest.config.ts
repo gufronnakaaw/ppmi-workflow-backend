@@ -9,6 +9,7 @@ export default defineConfig({
     environment: 'node',
     pool: 'threads',
     exclude: ['**\/node_modules/**', '**\/.git/**', '**\/dist/**'],
+    reporters: ['verbose'],
   },
   plugins: [swc.vite()],
   resolve: {
