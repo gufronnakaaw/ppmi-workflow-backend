@@ -46,7 +46,7 @@ model UserDivision {
   user_id        String
   division_id    String
 
-  user           User            @relation(fields: [user_id], references: [id])
+  user           User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   division       Division        @relation(fields: [division_id], references: [id])
 
   created_at     DateTime        @default(now())
@@ -75,7 +75,7 @@ model UserRole {
   user_id               String
   role_id               String
 
-  user                  User              @relation(fields: [user_id], references: [id])
+  user                  User              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   role                  Role              @relation(fields: [role_id], references: [id])
 
   created_at            DateTime          @default(now())
@@ -149,7 +149,7 @@ enum QSSTATUS {
 }
 
 model QS {
-  id                    String            @id @default(uuid())
+  id                    String            @id
   division_id           String
   type                  QSType
   status                QSSTATUS
@@ -173,6 +173,7 @@ model QS {
   updated_at            DateTime          @updatedAt
   deleted_at            DateTime?
 
+  @@index([division_id, status, type])
   @@map("qs")
 }
 
@@ -184,7 +185,7 @@ enum InvoiceStatus {
 }
 
 model Invoice {
-  id                    String            @id @default(uuid())
+  id                    String            @id
   qs_id                 String
   invoice_number        String            @unique
   invoice_date          DateTime
