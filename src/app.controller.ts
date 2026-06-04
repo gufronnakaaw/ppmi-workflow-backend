@@ -14,7 +14,7 @@ import {
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AppService } from './app.service';
 import {
@@ -70,6 +70,7 @@ export class AppController {
   @Get('divisions/:id')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async getDivision(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<SuccessResponse> {
@@ -105,6 +106,7 @@ export class AppController {
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(updateDivisionSchema))
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async updateDivision(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() body: UpdateDivisionDto,
@@ -138,6 +140,7 @@ export class AppController {
   @Get('roles/:id')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async getRole(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<SuccessResponse> {
@@ -173,6 +176,7 @@ export class AppController {
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(updateRoleSchema))
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async updateRole(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() body: UpdateRoleDto,
@@ -204,6 +208,7 @@ export class AppController {
   @ApiBearerAuth()
   @Get('banks/:id')
   @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async getBank(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<SuccessResponse> {
@@ -237,6 +242,7 @@ export class AppController {
   @Patch('banks/:id')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(updateBankSchema))
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async updateBank(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() body: UpdateBankDto,
@@ -257,6 +263,7 @@ export class AppController {
   @ApiBearerAuth()
   @Delete('banks/:id')
   @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async deleteBank(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Req() req: Request,
@@ -276,6 +283,7 @@ export class AppController {
   @Get('users')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
+  @ApiQuery({ name: 'division', required: true, type: String })
   async listUsers(
     @Query() query: { division: string },
   ): Promise<SuccessResponse> {
@@ -290,6 +298,7 @@ export class AppController {
   @Get('users/:id')
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async getUser(
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<SuccessResponse> {
@@ -305,6 +314,7 @@ export class AppController {
   @AuthMetaData('AdminOnly')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(updateUserSchema))
+  @ApiParam({ name: 'id', type: String, format: 'uuid' })
   async updateUser(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() body: UpdateUserDto,

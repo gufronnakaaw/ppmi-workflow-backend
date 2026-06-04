@@ -13,7 +13,7 @@ import {
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { Request } from 'express';
 import { UserGuard } from '../common/guards/user.guard';
 import { ZodValidationPipe } from '../common/pipes/zod.pipe';
@@ -34,6 +34,14 @@ export class QsController {
   @ApiBearerAuth()
   @Get()
   @HttpCode(HttpStatus.OK)
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'division', required: false, type: String })
+  @ApiQuery({ name: 'type', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: String })
+  @ApiQuery({ name: 'sort_by', required: false, type: String })
+  @ApiQuery({ name: 'sort_order', required: false, type: String })
   async listQs(
     @Query()
     query: {
@@ -57,6 +65,7 @@ export class QsController {
   @ApiBearerAuth()
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String })
   async getQs(@Param('id') id: string): Promise<SuccessResponse> {
     return {
       success: true,
@@ -88,6 +97,7 @@ export class QsController {
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(updateQsSchema))
+  @ApiParam({ name: 'id', type: String })
   async updateQs(
     @Param('id') id: string,
     @Body() body: UpdateQsDto,
@@ -108,6 +118,7 @@ export class QsController {
   @ApiBearerAuth()
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String })
   async deleteQs(
     @Param('id') id: string,
     @Req() req: Request,
