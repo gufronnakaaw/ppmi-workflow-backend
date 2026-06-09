@@ -91,6 +91,8 @@ model Bank {
   account_number        String            @unique
   account_name          String
   is_deleted            Boolean           @default(false)
+  
+  vouchers              Voucher[]
 
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
@@ -198,12 +200,54 @@ model Invoice {
   is_deleted            Boolean           @default(false)  
 
   qs                    QS                @relation(fields: [qs_id], references: [id])
+  voucher               Voucher?
+  shipment              DocumentShipment?
+  receipt               DocumentReceipt?
 
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
   deleted_at            DateTime?
 
   @@map("invoice")
+}
+
+model DocumentShipment {
+  id                    String            @id @default(uuid())
+  invoice_id            String            @unique
+  courier               String
+  tracking_number       String
+  shipping_date         DateTime
+  shipping_proof_id     String?           @unique
+
+  invoice               Invoice           @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipping_proof        FileAttachment?   @relation("DocumentShipmentShippingProof", fields: [shipping_proof_id], references: [id])
+  receipt               DocumentReceipt?  @relation("ShipmentReceipt")
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  deleted_at            DateTime?
+
+  @@map("document_shipment")
+}
+
+model DocumentReceipt {
+  id                    String            @id @default(uuid())
+  invoice_id            String            @unique
+  shipment_id           String            @unique
+  received_date         DateTime
+  receiver_name         String
+  receiver_note         String?
+  received_proof_id     String?           @unique
+
+  invoice               Invoice           @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipment              DocumentShipment  @relation("ShipmentReceipt", fields: [shipment_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  received_proof        FileAttachment?   @relation("DocumentReceiptReceivedProof", fields: [received_proof_id], references: [id])
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  deleted_at            DateTime?
+
+  @@map("document_receipt")
 }
 
 enum FileReferenceType {
@@ -223,8 +267,73 @@ model FileAttachment {
   reference_id          String
   is_deleted            Boolean           @default(false)
 
+  shipment_shipping_proof DocumentShipment? @relation("DocumentShipmentShippingProof")
+  receipt_received_proof  DocumentReceipt?  @relation("DocumentReceiptReceivedProof")
+
   uploaded_at           DateTime          @default(now())
   deleted_at            DateTime?
 
   @@map("file_attachment")
+}
+
+enum VoucherPaymentType {
+  CASH
+  BANK_TRANSFER
+  CHEQUE
+}
+
+enum VoucherStatus {
+  DRAFT
+  PENDING
+  CLOSED
+}
+
+model Voucher {
+  id                    String            @id 
+  invoice_id            String            @unique
+  voucher_number        String            @unique
+  voucher_date          DateTime
+  payment_type          VoucherPaymentType
+  bank_id               String?
+  amount                Int
+  currency              String
+  status                VoucherStatus
+  remarks               String
+  is_deleted            Boolean           @default(false)
+
+  invoice               Invoice           @relation(fields: [invoice_id], references: [id])
+  bank                  Bank?              @relation(fields: [bank_id], references: [id])
+  payments              Payments[]
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  deleted_at            DateTime?
+
+  @@map("voucher")
+}
+
+enum PaymentStatus {
+  UNPAID
+  INSTALLMENT
+  PAID
+}
+
+model Payments {
+  id                    String            @id 
+  voucher_id            String
+  installment_number    Int
+  payment_date          DateTime
+  due_date              DateTime
+  paid_amount           Int
+  remaining_amount      Int
+  payment_status        PaymentStatus 
+  payment_proof         String? 
+  remarks               String
+
+  voucher               Voucher           @relation(fields: [voucher_id], references: [id])
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  @@map("payments")
 }
