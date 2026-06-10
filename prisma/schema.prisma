@@ -172,9 +172,8 @@ model QS {
   remarks        String
   is_deleted     Boolean  @default(false)
 
-  invoices        Invoice[]
-  fileAttachments FileAttachment[]
-  division        Division         @relation(fields: [division_id], references: [id])
+  invoices Invoice[]
+  division Division  @relation(fields: [division_id], references: [id])
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
@@ -188,6 +187,7 @@ enum InvoiceStatus {
   DRAFT
   PENDING
   VOUCHER
+  SHIPPED
   CLOSED
 }
 
@@ -264,7 +264,6 @@ enum FileReferenceType {
 
 model FileAttachment {
   id             String            @id @default(uuid())
-  invoice_id     String
   file_name      String
   file_type      String
   file_size      Int
@@ -279,10 +278,6 @@ model FileAttachment {
 
   uploaded_at DateTime  @default(now())
   deleted_at  DateTime?
-  payments    Payments? @relation(fields: [paymentsId], references: [id])
-  paymentsId  String?
-  qs          QS?       @relation(fields: [qsId], references: [id])
-  qsId        String?
 
   @@map("file_attachment")
 }
@@ -312,9 +307,9 @@ model Voucher {
   remarks        String
   is_deleted     Boolean            @default(false)
 
-  invoice  Invoice    @relation(fields: [invoice_id], references: [id])
-  bank     Bank?      @relation(fields: [bank_id], references: [id])
-  payments Payments[]
+  invoice  Invoice   @relation(fields: [invoice_id], references: [id])
+  bank     Bank?     @relation(fields: [bank_id], references: [id])
+  payments Payment[]
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
@@ -329,7 +324,7 @@ enum PaymentStatus {
   PAID
 }
 
-model Payments {
+model Payment {
   id                 String        @id
   voucher_id         String
   installment_number Int
@@ -338,14 +333,12 @@ model Payments {
   paid_amount        Int
   remaining_amount   Int
   payment_status     PaymentStatus
-  payment_proof      String?
   remarks            String
 
   voucher Voucher @relation(fields: [voucher_id], references: [id])
 
-  created_at      DateTime         @default(now())
-  updated_at      DateTime         @updatedAt
-  fileAttachments FileAttachment[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@map("payments")
+  @@map("payment")
 }
