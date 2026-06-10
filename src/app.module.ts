@@ -7,6 +7,9 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaService } from './common/services/prisma.service';
 import { InvoicesModule } from './invoices/invoices.module';
 import { QsModule } from './qs/qs.module';
+import { VouchersModule } from './vouchers/vouchers.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ShipmentsModule } from './shipments/shipments.module';
 
 @Module({
   imports: [
@@ -21,8 +24,10 @@ import { QsModule } from './qs/qs.module';
     AuthModule,
     QsModule,
     InvoicesModule,
+    VouchersModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule {}
+export class AppModule { }
