@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -9,94 +9,94 @@ datasource db {
 }
 
 model Division {
-  id                    String            @id @default(uuid())
-  code                  String            @unique
-  name                  String            @unique
-  description           String?
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String  @unique
+  description String?
 
-  users                 UserDivision[]
-  qs                    QS[]
+  users UserDivision[]
+  qs    QS[]
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("division")
 }
 
 model User {
-  id             String          @id @default(uuid())
-  fullname       String
-  email          String          @unique
-  password       String          @db.VarChar(255)
-  phone          String?
-  is_admin       Boolean         @default(false)
+  id       String  @id @default(uuid())
+  fullname String
+  email    String  @unique
+  password String  @db.VarChar(255)
+  phone    String?
+  is_admin Boolean @default(false)
 
-  divisions      UserDivision[]
-  user_roles     UserRole[]
-  logs           Log[]
+  divisions  UserDivision[]
+  user_roles UserRole[]
+  logs       Log[]
 
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("user")
 }
 
 model UserDivision {
-  id             String          @id @default(uuid())
-  user_id        String
-  division_id    String
+  id          String @id @default(uuid())
+  user_id     String
+  division_id String
 
-  user           User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  division       Division        @relation(fields: [division_id], references: [id])
+  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  division Division @relation(fields: [division_id], references: [id])
 
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@unique([user_id, division_id])
   @@map("user_division")
 }
 
 model Role {
-  id                    String            @id @default(uuid())
-  code                  String            @unique
-  name                  String            @unique
-  description           String?
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String  @unique
+  description String?
 
-  user_roles            UserRole[]
+  user_roles UserRole[]
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@map("role")  
+  @@map("role")
 }
 
 model UserRole {
-  id                    String            @id @default(uuid())
-  user_id               String
-  role_id               String
+  id      String @id @default(uuid())
+  user_id String
+  role_id String
 
-  user                  User              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  role                  Role              @relation(fields: [role_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  role Role @relation(fields: [role_id], references: [id])
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@unique([user_id, role_id])
   @@map("user_role")
 }
 
 model Bank {
-  id                    String            @id @default(uuid())
-  name                  String            @unique
-  account_number        String            @unique
-  account_name          String
-  is_deleted            Boolean           @default(false)
-  
-  vouchers              Voucher[]
+  id             String  @id @default(uuid())
+  name           String  @unique
+  account_number String  @unique
+  account_name   String
+  is_deleted     Boolean @default(false)
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  deleted_at            DateTime?
+  vouchers Voucher[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
 
   @@map("bank")
 }
@@ -119,21 +119,25 @@ enum ReferenceType {
   QS
   INVOICE
   BANK
+  VOUCHER
+  PAYMENT
+  SHIPMENT
+  RECEIPT
 }
 
 model Log {
-  id                    String            @id @default(uuid())
-  user_id               String
-  action                Action
-  description           String            @db.Text
-  reference_id          String?
-  reference_type        ReferenceType?
-  details               String?           @db.Text
+  id             String         @id @default(uuid())
+  user_id        String
+  action         Action
+  description    String         @db.Text
+  reference_id   String?
+  reference_type ReferenceType?
+  details        String?        @db.Text
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  user                  User              @relation(fields: [user_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
 
   @@map("log")
 }
@@ -151,29 +155,30 @@ enum QSSTATUS {
 }
 
 model QS {
-  id                    String            @id
-  division_id           String
-  type                  QSType
-  status                QSSTATUS
-  insured               String
-  vessel                String
-  insurance             String
-  member                String
-  leader                String
-  policy_number         String
-  period_from           DateTime
-  period_to             DateTime
-  premium_amount        Int
-  currency              String
-  remarks               String
-  is_deleted            Boolean           @default(false)  
+  id             String   @id
+  division_id    String
+  type           QSType
+  status         QSSTATUS
+  insured        String
+  vessel         String
+  insurance      String
+  member         String
+  leader         String
+  policy_number  String
+  period_from    DateTime
+  period_to      DateTime
+  premium_amount Int
+  currency       String
+  remarks        String
+  is_deleted     Boolean  @default(false)
 
-  invoices              Invoice[]
-  division              Division          @relation(fields: [division_id], references: [id])
+  invoices        Invoice[]
+  fileAttachments FileAttachment[]
+  division        Division         @relation(fields: [division_id], references: [id])
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  deleted_at            DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
 
   @@index([division_id, status, type])
   @@map("qs")
@@ -187,65 +192,65 @@ enum InvoiceStatus {
 }
 
 model Invoice {
-  id                    String            @id
-  qs_id                 String
-  invoice_number        String            @unique
-  invoice_date          DateTime
-  due_date              DateTime
-  insured               String
-  amount                Int
-  currency              String
-  status                InvoiceStatus
-  remarks               String
-  is_deleted            Boolean           @default(false)  
+  id             String        @id
+  qs_id          String
+  invoice_number String        @unique
+  invoice_date   DateTime
+  due_date       DateTime
+  insured        String
+  amount         Int
+  currency       String
+  status         InvoiceStatus
+  remarks        String
+  is_deleted     Boolean       @default(false)
 
-  qs                    QS                @relation(fields: [qs_id], references: [id])
-  voucher               Voucher?
-  shipment              DocumentShipment?
-  receipt               DocumentReceipt?
+  qs       QS                @relation(fields: [qs_id], references: [id])
+  voucher  Voucher?
+  shipment DocumentShipment?
+  receipt  DocumentReceipt?
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  deleted_at            DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
 
   @@map("invoice")
 }
 
 model DocumentShipment {
-  id                    String            @id @default(uuid())
-  invoice_id            String            @unique
-  courier               String
-  tracking_number       String
-  shipping_date         DateTime
-  shipping_proof_id     String?           @unique
+  id                String   @id @default(uuid())
+  invoice_id        String   @unique
+  courier           String
+  tracking_number   String
+  shipping_date     DateTime
+  shipping_proof_id String?  @unique
 
-  invoice               Invoice           @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  shipping_proof        FileAttachment?   @relation("DocumentShipmentShippingProof", fields: [shipping_proof_id], references: [id])
-  receipt               DocumentReceipt?  @relation("ShipmentReceipt")
+  invoice        Invoice          @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipping_proof FileAttachment?  @relation("DocumentShipmentShippingProof", fields: [shipping_proof_id], references: [id])
+  receipt        DocumentReceipt? @relation("ShipmentReceipt")
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  deleted_at            DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
 
   @@map("document_shipment")
 }
 
 model DocumentReceipt {
-  id                    String            @id @default(uuid())
-  invoice_id            String            @unique
-  shipment_id           String            @unique
-  received_date         DateTime
-  receiver_name         String
-  receiver_note         String?
-  received_proof_id     String?           @unique
+  id                String   @id @default(uuid())
+  invoice_id        String   @unique
+  shipment_id       String   @unique
+  received_date     DateTime
+  receiver_name     String
+  receiver_note     String?
+  received_proof_id String?  @unique
 
-  invoice               Invoice           @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  shipment              DocumentShipment  @relation("ShipmentReceipt", fields: [shipment_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  received_proof        FileAttachment?   @relation("DocumentReceiptReceivedProof", fields: [received_proof_id], references: [id])
+  invoice        Invoice          @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipment       DocumentShipment @relation("ShipmentReceipt", fields: [shipment_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  received_proof FileAttachment?  @relation("DocumentReceiptReceivedProof", fields: [received_proof_id], references: [id])
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  deleted_at            DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
 
   @@map("document_receipt")
 }
@@ -253,25 +258,31 @@ model DocumentReceipt {
 enum FileReferenceType {
   INVOICE
   SHIPMENT
+  QS
+  PAYMENT
 }
 
 model FileAttachment {
-  id                    String            @id @default(uuid())
-  invoice_id            String
-  file_name             String
-  file_type             String
-  file_size             Int
-  file_url              String
-  file_key              String
-  reference_type        FileReferenceType
-  reference_id          String
-  is_deleted            Boolean           @default(false)
+  id             String            @id @default(uuid())
+  invoice_id     String
+  file_name      String
+  file_type      String
+  file_size      Int
+  file_url       String
+  file_key       String
+  reference_type FileReferenceType
+  reference_id   String
+  is_deleted     Boolean           @default(false)
 
   shipment_shipping_proof DocumentShipment? @relation("DocumentShipmentShippingProof")
   receipt_received_proof  DocumentReceipt?  @relation("DocumentReceiptReceivedProof")
 
-  uploaded_at           DateTime          @default(now())
-  deleted_at            DateTime?
+  uploaded_at DateTime  @default(now())
+  deleted_at  DateTime?
+  payments    Payments? @relation(fields: [paymentsId], references: [id])
+  paymentsId  String?
+  qs          QS?       @relation(fields: [qsId], references: [id])
+  qsId        String?
 
   @@map("file_attachment")
 }
@@ -289,25 +300,25 @@ enum VoucherStatus {
 }
 
 model Voucher {
-  id                    String            @id 
-  invoice_id            String            @unique
-  voucher_number        String            @unique
-  voucher_date          DateTime
-  payment_type          VoucherPaymentType
-  bank_id               String?
-  amount                Int
-  currency              String
-  status                VoucherStatus
-  remarks               String
-  is_deleted            Boolean           @default(false)
+  id             String             @id
+  invoice_id     String             @unique
+  voucher_number String             @unique
+  voucher_date   DateTime
+  payment_type   VoucherPaymentType
+  bank_id        String?
+  amount         Int
+  currency       String
+  status         VoucherStatus
+  remarks        String
+  is_deleted     Boolean            @default(false)
 
-  invoice               Invoice           @relation(fields: [invoice_id], references: [id])
-  bank                  Bank?              @relation(fields: [bank_id], references: [id])
-  payments              Payments[]
+  invoice  Invoice    @relation(fields: [invoice_id], references: [id])
+  bank     Bank?      @relation(fields: [bank_id], references: [id])
+  payments Payments[]
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  deleted_at            DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
 
   @@map("voucher")
 }
@@ -319,21 +330,22 @@ enum PaymentStatus {
 }
 
 model Payments {
-  id                    String            @id 
-  voucher_id            String
-  installment_number    Int
-  payment_date          DateTime
-  due_date              DateTime
-  paid_amount           Int
-  remaining_amount      Int
-  payment_status        PaymentStatus 
-  payment_proof         String? 
-  remarks               String
+  id                 String        @id
+  voucher_id         String
+  installment_number Int
+  payment_date       DateTime
+  due_date           DateTime
+  paid_amount        Int
+  remaining_amount   Int
+  payment_status     PaymentStatus
+  payment_proof      String?
+  remarks            String
 
-  voucher               Voucher           @relation(fields: [voucher_id], references: [id])
+  voucher Voucher @relation(fields: [voucher_id], references: [id])
 
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  fileAttachments FileAttachment[]
 
   @@map("payments")
 }
