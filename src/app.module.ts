@@ -26,6 +26,7 @@ import { ShipmentsModule } from './shipments/shipments.module';
     InvoicesModule,
     VouchersModule,
     PaymentsModule,
+    ShipmentsModule
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
