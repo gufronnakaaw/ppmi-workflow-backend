@@ -41,7 +41,7 @@ import { SuccessResponse } from './common/types/global.type';
 @Controller()
 @UseGuards(UserGuard)
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   @Get()
   @AuthMetaData('SkipAuth')
@@ -51,6 +51,33 @@ export class AppController {
       success: true,
       status_code: HttpStatus.OK,
       message: `PPMI Workflow ${process.env.MODE === 'production' ? 'API' : 'Dev API'}`,
+    };
+  }
+
+  @ApiBearerAuth()
+  @Get('/overview/stats')
+  @HttpCode(HttpStatus.OK)
+  async getDashboardStats(): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: await this.appService.getDashboardStats(),
+    };
+  }
+
+  @ApiBearerAuth()
+  @Get('/overview/workspace')
+  @HttpCode(HttpStatus.OK)
+  async getWorkflowPipeline(): Promise<SuccessResponse> {
+    return {
+      success: true,
+      status_code: HttpStatus.OK,
+      data: {
+        workflows: await this.appService.getWorkflowPipeline(),
+        recents: await this.appService.getRecentActivities(),
+        finances: await this.appService.getFinanceMonitor(),
+        payments: await this.appService.getPaymentDashboard()
+      },
     };
   }
 

@@ -24,6 +24,11 @@ describe('AppController', () => {
     listUsers: vi.fn(),
     getUser: vi.fn(),
     updateUser: vi.fn(),
+    getDashboardStats: vi.fn(),
+    getWorkflowPipeline: vi.fn(),
+    getRecentActivities: vi.fn(),
+    getFinanceMonitor: vi.fn(),
+    getPaymentDashboard: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -349,6 +354,75 @@ describe('AppController', () => {
       success: true,
       status_code: HttpStatus.OK,
       data: { id: 'user-1' },
+    });
+  });
+
+  describe('getDashboardStats', () => {
+    it('returns dashboard stats response', async () => {
+      const statsMock = {
+        quotation_sheets: { total: 10, active_this_month: 2 },
+        active_invoices: { total: 5, pending_approval: 1, trend_this_week: 1 },
+        pending_payments: { total: 3, total_value: 15000 },
+        overdue_payments: { total: 1, trend_since_yesterday: 0 },
+        completed_shipments: { total: 8, total_processed: 8, trend_this_week: 2 },
+      };
+      appServiceMock.getDashboardStats.mockResolvedValue(statsMock);
+
+      const result = await controller.getDashboardStats();
+
+      expect(appServiceMock.getDashboardStats).toHaveBeenCalled();
+      expect(result).toEqual({
+        success: true,
+        status_code: HttpStatus.OK,
+        data: statsMock,
+      });
+    });
+  });
+
+  describe('getWorkflowPipeline', () => {
+    it('returns workflow workspace response', async () => {
+      const pipelineMock = [
+        { stage: 'Quotation Sheet', total: 10, completed: 8, pending: 2, in_progress: 0, overdue: 0, completion_percentage: 80 },
+      ];
+      const recentsMock = [
+        { id: 'log-1', title: 'CREATE', division_code: 'DIV', reference_number: '123', description: 'desc', actor: 'User', action: 'CREATE', reference_type: 'QS', created_at: new Date() },
+      ];
+      const financesMock = {
+        overdue_payments: { count: 1, amount: 5000 },
+        unpaid_invoices: { count: 2, amount: 10000 },
+        due_within_7_days: { count: 1, amount: 2000 },
+        active_installments: { plans: 1, pending_installments: 1 },
+      };
+      const paymentsMock = {
+        overdue_count: 1,
+        overdue_total_amount: 5000,
+        upcoming_count: 1,
+        upcoming_total_amount: 2000,
+        overdue_payments: [],
+        upcoming_payments: [],
+      };
+
+      appServiceMock.getWorkflowPipeline.mockResolvedValue(pipelineMock);
+      appServiceMock.getRecentActivities.mockResolvedValue(recentsMock);
+      appServiceMock.getFinanceMonitor.mockResolvedValue(financesMock);
+      appServiceMock.getPaymentDashboard.mockResolvedValue(paymentsMock);
+
+      const result = await controller.getWorkflowPipeline();
+
+      expect(appServiceMock.getWorkflowPipeline).toHaveBeenCalled();
+      expect(appServiceMock.getRecentActivities).toHaveBeenCalled();
+      expect(appServiceMock.getFinanceMonitor).toHaveBeenCalled();
+      expect(appServiceMock.getPaymentDashboard).toHaveBeenCalled();
+      expect(result).toEqual({
+        success: true,
+        status_code: HttpStatus.OK,
+        data: {
+          workflows: pipelineMock,
+          recents: recentsMock,
+          finances: financesMock,
+          payments: paymentsMock,
+        },
+      });
     });
   });
 });

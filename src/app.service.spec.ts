@@ -48,6 +48,46 @@ describe('AppService', () => {
     },
     log: {
       create: vi.fn(),
+      findMany: vi.fn(),
+    },
+    qS: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    invoice: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      aggregate: vi.fn(),
+    },
+    payment: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      aggregate: vi.fn(),
+      groupBy: vi.fn(),
+    },
+    voucher: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      aggregate: vi.fn(),
+    },
+    documentShipment: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
     $transaction: vi.fn(),
   };
@@ -849,6 +889,209 @@ describe('AppService', () => {
       email: 'user@example.com',
       phone: '081234567890',
       is_admin: false,
+    });
+  });
+
+  describe('getDashboardStats', () => {
+    it('should compute and return dashboard stats', async () => {
+      prismaMock.qS.count.mockResolvedValueOnce(10).mockResolvedValueOnce(3);
+      prismaMock.invoice.count
+        .mockResolvedValueOnce(5) // activeInvoices
+        .mockResolvedValueOnce(1) // pendingApprovalInvoices
+        .mockResolvedValueOnce(4) // invoicesThisWeek
+        .mockResolvedValueOnce(2) // invoicesLastWeek
+        .mockResolvedValueOnce(8) // completedShipments
+        .mockResolvedValueOnce(3) // shipmentsThisWeek
+        .mockResolvedValueOnce(1); // shipmentsLastWeek
+      prismaMock.payment.findMany.mockResolvedValue([
+        { paid_amount: 1000, remaining_amount: 4000, voucher: { amount: 5000, currency: 'USD' } },
+        { paid_amount: 0, remaining_amount: 2000, voucher: { amount: 2000, currency: 'USD' } },
+      ]);
+      prismaMock.payment.count
+        .mockResolvedValueOnce(2) // overduePayments
+        .mockResolvedValueOnce(1); // overdueAsOfYesterday
+
+      const result = await service.getDashboardStats();
+
+      expect(result).toEqual({
+        quotation_sheets: { total: 10, active_this_month: 3 },
+        active_invoices: { total: 5, pending_approval: 1, trend_this_week: 2 },
+        pending_payments: { total: 2, total_value: 6000 },
+        overdue_payments: { total: 2, trend_since_yesterday: 1 },
+        completed_shipments: { total: 8, total_processed: 8, trend_this_week: 2 },
+      });
+    });
+  });
+
+  describe('getWorkflowPipeline', () => {
+    it('should query and return workflow pipeline stages', async () => {
+      prismaMock.qS.count
+        .mockResolvedValueOnce(10) // total
+        .mockResolvedValueOnce(8)  // completed
+        .mockResolvedValueOnce(1)  // in_progress
+        .mockResolvedValueOnce(1); // pending
+      prismaMock.invoice.count
+        .mockResolvedValueOnce(15) // total
+        .mockResolvedValueOnce(10) // completed
+        .mockResolvedValueOnce(3)  // in_progress
+        .mockResolvedValueOnce(2)  // pending
+        .mockResolvedValueOnce(1); // overdue
+      prismaMock.voucher.count
+        .mockResolvedValueOnce(5)  // total
+        .mockResolvedValueOnce(3)  // completed
+        .mockResolvedValueOnce(1)  // in_progress
+        .mockResolvedValueOnce(1)  // pending
+        .mockResolvedValueOnce(0); // overdue
+      prismaMock.payment.count
+        .mockResolvedValueOnce(8)  // total
+        .mockResolvedValueOnce(4)  // completed
+        .mockResolvedValueOnce(2)  // in_progress
+        .mockResolvedValueOnce(2)  // pending
+        .mockResolvedValueOnce(1); // overdue
+      prismaMock.documentShipment.count
+        .mockResolvedValueOnce(6)  // total
+        .mockResolvedValueOnce(4)  // completed
+        .mockResolvedValueOnce(2); // in_progress
+      prismaMock.invoice.count.mockResolvedValueOnce(1); // shipmentPending
+
+      const result = await service.getWorkflowPipeline();
+
+      expect(result).toHaveLength(5);
+      expect(result[0]).toEqual({
+        stage: 'Quotation Sheet',
+        total: 10,
+        completed: 8,
+        pending: 1,
+        in_progress: 1,
+        overdue: 0,
+        completion_percentage: 80,
+      });
+      expect(result[1].stage).toBe('Invoice');
+      expect(result[2].stage).toBe('Voucher');
+      expect(result[3].stage).toBe('Payment');
+      expect(result[4].stage).toBe('Shipment');
+    });
+  });
+
+  describe('getPaymentDashboard', () => {
+    it('should compute payment dashboard data', async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 3);
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 3);
+
+      prismaMock.payment.findMany.mockResolvedValue([
+        {
+          id: 'pay-1',
+          remaining_amount: 4000,
+          due_date: pastDate,
+          payment_status: 'UNPAID',
+          voucher: {
+            invoice: {
+              id: 'inv-1',
+              invoice_number: 'INV-001',
+              insured: 'Insured A',
+              qs: {},
+            },
+          },
+        },
+        {
+          id: 'pay-2',
+          remaining_amount: 2000,
+          due_date: futureDate,
+          payment_status: 'INSTALLMENT',
+          voucher: {
+            invoice: {
+              id: 'inv-2',
+              invoice_number: 'INV-002',
+              insured: 'Insured B',
+              qs: {},
+            },
+          },
+        },
+      ]);
+
+      const result = await service.getPaymentDashboard();
+
+      expect(result.overdue_count).toBe(1);
+      expect(result.overdue_total_amount).toBe(4000);
+      expect(result.upcoming_count).toBe(1);
+      expect(result.upcoming_total_amount).toBe(2000);
+      expect(result.overdue_payments[0].payment_id).toBe('pay-1');
+      expect(result.upcoming_payments[0].payment_id).toBe('pay-2');
+    });
+  });
+
+  describe('getFinanceMonitor', () => {
+    it('should aggregate financial metrics', async () => {
+      prismaMock.payment.aggregate
+        .mockResolvedValueOnce({
+          _count: 2,
+          _sum: { remaining_amount: 6000 },
+        }) // overduePayments
+        .mockResolvedValueOnce({
+          _count: 3,
+          _sum: { remaining_amount: 8000 },
+        }); // dueWithin7Days
+
+      prismaMock.invoice.aggregate.mockResolvedValue({
+        _count: 5,
+        _sum: { amount: 25000 },
+      }); // unpaidInvoices
+
+      prismaMock.payment.groupBy.mockResolvedValue([
+        { voucher_id: 'v-1' },
+        { voucher_id: 'v-2' },
+      ]); // activeInstallmentPlans
+
+      prismaMock.payment.count.mockResolvedValue(4); // pendingInstallments
+
+      const result = await service.getFinanceMonitor();
+
+      expect(result).toEqual({
+        overdue_payments: { count: 2, amount: 6000 },
+        unpaid_invoices: { count: 5, amount: 25000 },
+        due_within_7_days: { count: 3, amount: 8000 },
+        active_installments: { plans: 2, pending_installments: 4 },
+      });
+    });
+  });
+
+  describe('getRecentActivities', () => {
+    it('should query log actions and map recent activity items', async () => {
+      const logDate = new Date();
+      prismaMock.log.findMany.mockResolvedValue([
+        {
+          id: 'log-1',
+          action: 'CREATE',
+          description: 'User created QS-1',
+          reference_id: 'QS-1',
+          reference_type: 'QS',
+          details: JSON.stringify({
+            division_code: 'DIV',
+            reference_number: 'QS-1',
+            title: 'Create Quotation Sheet',
+          }),
+          created_at: logDate,
+          user: { fullname: 'Full Name' },
+        },
+      ]);
+
+      const result = await service.getRecentActivities();
+
+      expect(result).toEqual([
+        {
+          id: 'log-1',
+          title: 'Create Quotation Sheet',
+          division_code: 'DIV',
+          reference_number: 'QS-1',
+          description: 'User created QS-1',
+          actor: 'Full Name',
+          action: 'CREATE',
+          reference_type: 'QS',
+          created_at: logDate,
+        },
+      ]);
     });
   });
 });
