@@ -6,7 +6,9 @@ import { AppModule } from './app.module';
 import { GlobalException } from './common/exceptions/global.exception';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('PPMI Workflow API Documentation')
